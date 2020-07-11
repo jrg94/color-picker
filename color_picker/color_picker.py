@@ -66,27 +66,53 @@ def rgb(hue: float, saturation: float, value: float) -> tuple:
     return tuple((prime + m) * 255)
 
 
-def search(path, rgb):
+def search(path: str, color: tuple) -> tuple:
+    """
+    Finds the pixel which contains the closest possible color to the one provided.
+
+    :param path: the path of an image to search
+    :param color: the color of the pixel to find in RGB
+    :return: the location of the pixel that best matches the provided color as a tuple (x, y)
+    """
     im: Image.Image = Image.open(path)
     pix = im.load()
     minimum = (0, 0)
     for x in range(im.width):
         for y in range(im.height):
-            dist = color_diff(np.array(rgb), np.array(pix[x, y]))
-            if dist < color_diff(np.array(rgb), np.array(pix[minimum[0], minimum[1]])):
+            dist = color_diff(np.array(color), np.array(pix[x, y]))
+            if dist < color_diff(np.array(color), np.array(pix[minimum[0], minimum[1]])):
                 minimum = (x, y)
-    reticle = Image.open('pso2/reticle.png')
-    im.paste(reticle, (minimum[0] - 13, minimum[1] - 13), reticle)
-    im.show()
-    im.save('pso2/dump2.png')
+    return minimum
 
 
-nagatoro_skin = (233, 183, 146)  # nagatoro
-search('pso2/human-newman.png', nagatoro_skin)
+def render_reticle(path: str, pixel: tuple) -> Image.Image:
+    """
+    Renders the reticle at the position of a pixel.
 
-nagatoro_iris = (123, 123, 123)
-h, s, v = hsv(*nagatoro_iris)
-print(h, s, v)
-nagatoro_iris = rgb(h, 1, v)
-print(nagatoro_iris)
-search('pso2/cast.png', nagatoro_iris)
+    :param path: the image to draw on
+    :param pixel: the location of the reticle
+    :return: the updated image
+    """
+    im: Image.Image = Image.open(path)
+    reticle = Image.open('../assets/reticle.png')
+    im.paste(reticle, (pixel[0] - 13, pixel[1] - 13), reticle)
+    return im
+
+
+if __name__ == '__main__':
+    # Nagatoro skin color lookup
+    nagatoro_skin_color = (233, 183, 146)
+    pixel = search('../assets/human-newman.png', nagatoro_skin_color)
+    nagatoro_skin_sample = render_reticle('../assets/human-newman.png', pixel)
+    nagatoro_skin_sample.show()
+    nagatoro_skin_sample.save('../samples/nagatoro_skin.png')
+
+    # Nagatoro iris color lookup
+    nagatoro_iris_color = (123, 123, 123)
+    h, s, v = hsv(*nagatoro_iris_color)
+    print(f"Hue: {h}\nSaturation: {s}\nValue: {v}")
+    nagatoro_iris_color = rgb(h, 1, v)
+    pixel = search('../assets/cast.png', nagatoro_iris_color)
+    nagatoro_iris_sample = render_reticle("../assets/cast.png", pixel)
+    nagatoro_iris_sample.show()
+    nagatoro_iris_sample.save('../samples/nagatoro_iris.png')
