@@ -1,16 +1,31 @@
-import numpy
+import numpy as np
 from PIL import Image
 
 
-def color_diff(color1, color2):
-    return numpy.sum((color1 - color2) ** 2) ** 1 / 2
+def color_diff(rgb_x: np.array, rgb_y: np.array) -> float:
+    """
+    Computes the distance between two colors using Euclidean distance.
+
+    :param rgb_x: a vector of one rbg color
+    :param rgb_y: a vector of another rgb color
+    :return: the distance between two vectors
+    """
+    return np.sum((rgb_x - rgb_y) ** 2) ** 1 / 2
 
 
-def hsv(rgb: tuple) -> tuple:
-    hue = numpy.array(rgb) / 255
-    value_index = numpy.argmax(hue)
+def hsv(red: int, green: int, blue: int) -> tuple:
+    """
+    Converts RBG to HSV.
+
+    :param red: the red value of the color (0 - 255)
+    :param green: the green value of the color (0 - 255)
+    :param blue: the blue value of the color (0 - 255)
+    :return: HSV as a tuple
+    """
+    hue = np.array((red, green, blue)) / 255
+    value_index = np.argmax(hue)
     value = hue[value_index]
-    delta = value - numpy.min(hue)
+    delta = value - np.min(hue)
     if delta == 0:
         hue = 0
     elif value_index == 0:
@@ -47,7 +62,7 @@ def rgb(hue: float, saturation: float, value: float) -> tuple:
         prime = (x, 0, c)
     else:
         prime = (c, 0, x)
-    prime = numpy.array(prime)
+    prime = np.array(prime)
     return tuple((prime + m) * 255)
 
 
@@ -57,8 +72,8 @@ def search(path, rgb):
     minimum = (0, 0)
     for x in range(im.width):
         for y in range(im.height):
-            dist = color_diff(numpy.array(rgb), numpy.array(pix[x, y]))
-            if dist < color_diff(numpy.array(rgb), numpy.array(pix[minimum[0], minimum[1]])):
+            dist = color_diff(np.array(rgb), np.array(pix[x, y]))
+            if dist < color_diff(np.array(rgb), np.array(pix[minimum[0], minimum[1]])):
                 minimum = (x, y)
     reticle = Image.open('pso2/reticle.png')
     im.paste(reticle, (minimum[0] - 13, minimum[1] - 13), reticle)
@@ -70,7 +85,7 @@ nagatoro_skin = (233, 183, 146)  # nagatoro
 search('pso2/human-newman.png', nagatoro_skin)
 
 nagatoro_iris = (123, 123, 123)
-h, s, v = hsv(nagatoro_iris)
+h, s, v = hsv(*nagatoro_iris)
 print(h, s, v)
 nagatoro_iris = rgb(h, 1, v)
 print(nagatoro_iris)
