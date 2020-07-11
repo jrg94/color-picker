@@ -108,7 +108,7 @@ if __name__ == '__main__':
     nagatoro_skin_sample.save('../samples/nagatoro_skin.png')
 
     # Nagatoro iris color lookup
-    nagatoro_iris_color = (123, 123, 123)
+    nagatoro_iris_color = (152, 90, 70)
     h, s, v = hsv(*nagatoro_iris_color)
     print(f"Hue: {h}\nSaturation: {s}\nValue: {v}")
     nagatoro_iris_color = rgb(h, 1, v)
