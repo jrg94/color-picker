@@ -120,7 +120,6 @@ def generate_gradient(color_x: tuple, color_y: tuple, size: tuple) -> tuple:
     :param size: the size of the rectangle (width, height)
     :return: the gradient as a tuple
     """
-    print(size)
     img = list()
     for x in range(size[0]):
         for y in range(size[1]):
@@ -155,7 +154,6 @@ def get_color(color: tuple):
             gray = int(np.sum(color) / 3)
             gray = (gray, gray, gray)
             x = int((h / 360) * 268)
-            h, s, v = hsv(*gray)
             im: Image.Image = Image.open('../assets/cast-grayscale.png')
             pix = im.load()
             minimum = (x, 0)
@@ -172,13 +170,13 @@ def get_color(color: tuple):
                 dist = color_diff(np.array(c), np.array(color))
                 if dist < color_diff(np.array(c), np.array(grad[index])):
                     index = i
-            ratio = index / len(grad)
+            ratio = 1 - (index / len(grad))
             return minimum, ratio
 
 
 if __name__ == '__main__':
     # WOOOO RISKY
-    pixel, ratio = get_color((24,16,138))
+    pixel, ratio = get_color((195,188,169))
     render_reticle("../assets/cast.png", pixel).show()
     print(ratio)
 
