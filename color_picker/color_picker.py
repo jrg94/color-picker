@@ -167,12 +167,25 @@ def get_closest_color(colors: Sequence, target_color: tuple) -> int:
     return min_index
 
 
-def get_average_gray(color: tuple):
+def get_average_gray(color: tuple) -> tuple:
+    """
+    Generates a gray color given a color.
+
+    :param color: an RGB color
+    :return: an average RGB gray
+    """
     average_gray = int(np.sum(color) / 3)
-    return (average_gray, average_gray, average_gray)
+    return average_gray, average_gray, average_gray
 
 
-def get_cast_color(color: tuple, hue: float):
+def get_cast_color(color: tuple):
+    """
+    Computes a cast color given a target color in RGB.
+
+    :param color: an RGB color
+    :return: the location of the color pixel (x, y)
+    """
+    hue, _, _ = hsv(*color)
     average_gray = get_average_gray(color)
     column_index = int((hue / 360) * 268)
     im: Image.Image = Image.open(CAST_GRAY_IMAGE)
@@ -181,7 +194,15 @@ def get_cast_color(color: tuple, hue: float):
     return minimum
 
 
-def get_cast_scaling_factor(color: tuple, minimum: tuple):
+def get_cast_scaling_factor(color: tuple, minimum: tuple) -> float:
+    """
+    Computes a scaling factor given a target color and
+    the location of the cast color.
+
+    :param color: a target RGB color
+    :param minimum: the location of the closest cast color
+    :return: a scaling factor (0 -> 1)
+    """
     average_gray = get_average_gray(color)
     im: Image.Image = Image.open(CAST_COLOR_IMAGE)
     pix = im.load()
@@ -203,13 +224,12 @@ def get_cast_color_info(color: tuple) -> tuple:
     if color[0] == color[1] == color[2] or s > THRESHOLD or v > THRESHOLD:
         return search(CAST_COLOR_IMAGE, color), 100
     else:
-        minimum = get_cast_color(color, h)
+        minimum = get_cast_color(color)
         percent = get_cast_scaling_factor(color, minimum)
         return minimum, percent
 
 
 if __name__ == '__main__':
-    # WOOOO RISKY
     pixel, ratio = get_cast_color_info((195, 188, 169))
     render_reticle("../assets/cast.png", pixel).show()
     print(ratio)
