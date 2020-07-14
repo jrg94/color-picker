@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import numpy as np
 from PIL import Image
 
@@ -143,6 +145,15 @@ def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
     grad.save('gradient.png')
 
 
+def get_closest_color(colors: Sequence, target_color: tuple):
+    min_index = 0
+    for i, color in enumerate(colors):
+        distance = color_diff(np.array(color), np.array(target_color))
+        if distance < color_diff(np.array(color), np.array(colors[min_index])):
+            min_index = i
+    return min_index
+
+
 def get_color(color: tuple):
     if color[0] == color[1] == color[2]:
         return search("../assets/cast.png", color), 100
@@ -165,20 +176,17 @@ def get_color(color: tuple):
             pix = im.load()
             rgb = pix[minimum[0], minimum[1]]
             grad = generate_gradient(rgb, gray, (23, 197))
-            index = 0
-            for i, c in enumerate(grad):
-                dist = color_diff(np.array(c), np.array(color))
-                if dist < color_diff(np.array(c), np.array(grad[index])):
-                    index = i
+            index = get_closest_color(grad, color)
             ratio = 1 - (index / len(grad))
             return minimum, ratio
 
 
 if __name__ == '__main__':
     # WOOOO RISKY
-    pixel, ratio = get_color((195,188,169))
+    pixel, ratio = get_color((195, 188, 169))
     render_reticle("../assets/cast.png", pixel).show()
     print(ratio)
+
 
     """
     # Nagatoro skin color lookup
