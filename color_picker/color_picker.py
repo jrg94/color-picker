@@ -1,5 +1,13 @@
+from typing import Sequence
+
 import numpy as np
 from PIL import Image
+
+
+THRESHOLD = .995
+
+CAST_COLOR_IMAGE = "../assets/cast.png"
+CAST_GRAY_IMAGE = '../assets/cast-grayscale.png'
 
 
 def color_diff(rgb_x: np.array, rgb_y: np.array) -> float:
@@ -121,9 +129,9 @@ def generate_gradient(color_x: tuple, color_y: tuple, size: tuple) -> tuple:
     :return: the gradient as a tuple
     """
     img = list()
-    for y in range(size[0]):
-        for x in range(size[1]):
-            img.append(gradient(np.array(color_x), np.array(color_y), y / 196))
+    for x in range(size[0]):
+        for y in range(size[1]):
+            img.append(gradient(np.array(color_x), np.array(color_y), x / (size[0] - 1)))
     return tuple(img)
 
 
@@ -143,9 +151,90 @@ def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
     grad.save('gradient.png')
 
 
-if __name__ == '__main__':
-    render_gradient((111, 102, 255), (156, 156, 156), (197, 23))
+def get_closest_color(colors: Sequence, target_color: tuple) -> int:
+    """
+    Gets the index of closest color from a sequence.
 
+    :param colors: a sequence of RGB colors
+    :param target_color: an RGB color to find
+    :return: the index of the closest color
+    """
+    min_index = 0
+    for i, color in enumerate(colors):
+        distance = color_diff(np.array(color), np.array(target_color))
+        if distance < color_diff(np.array(color), np.array(colors[min_index])):
+            min_index = i
+    return min_index
+
+
+def get_average_gray(color: tuple) -> tuple:
+    """
+    Generates a gray color given a color.
+
+    :param color: an RGB color
+    :return: an average RGB gray
+    """
+    average_gray = int(np.sum(color) / 3)
+    return average_gray, average_gray, average_gray
+
+
+def get_cast_color(color: tuple):
+    """
+    Computes a cast color given a target color in RGB.
+
+    :param color: an RGB color
+    :return: the location of the color pixel (x, y)
+    """
+    hue, _, _ = hsv(*color)
+    average_gray = get_average_gray(color)
+    column_index = int((hue / 360) * 268)
+    im: Image.Image = Image.open(CAST_GRAY_IMAGE)
+    column = list(im.getdata())[column_index::im.width]
+    minimum = (column_index, get_closest_color(column, average_gray))
+    return minimum
+
+
+def get_cast_scaling_factor(color: tuple, minimum: tuple) -> float:
+    """
+    Computes a scaling factor given a target color and
+    the location of the cast color.
+
+    :param color: a target RGB color
+    :param minimum: the location of the closest cast color
+    :return: a scaling factor (0 -> 1)
+    """
+    average_gray = get_average_gray(color)
+    im: Image.Image = Image.open(CAST_COLOR_IMAGE)
+    pix = im.load()
+    closest_color = pix[minimum[0], minimum[1]]
+    grad = generate_gradient(closest_color, average_gray, (23, 197))
+    index = get_closest_color(grad, color)
+    percent = 1 - (index / len(grad))
+    return percent
+
+
+def get_cast_color_info(color: tuple) -> tuple:
+    """
+    Returns the location of the closest color and its scaling factor.
+
+    :param color: an RGB color to find
+    :return: closest color pixel (x, y) and scaling factor (0 -> 1)
+    """
+    h, s, v = hsv(*color)
+    if color[0] == color[1] == color[2] or s > THRESHOLD or v > THRESHOLD:
+        return search(CAST_COLOR_IMAGE, color), 100
+    else:
+        minimum = get_cast_color(color)
+        percent = get_cast_scaling_factor(color, minimum)
+        return minimum, percent
+
+
+if __name__ == '__main__':
+    pixel, ratio = get_cast_color_info((195, 188, 169))
+    render_reticle("../assets/cast.png", pixel).show()
+    print(ratio)
+
+    """
     # Nagatoro skin color lookup
     nagatoro_skin_color = (233, 183, 146)
     pixel = search('../assets/human-newman.png', nagatoro_skin_color)
@@ -162,3 +251,4 @@ if __name__ == '__main__':
     nagatoro_iris_sample = render_reticle("../assets/cast.png", pixel)
     nagatoro_iris_sample.show()
     nagatoro_iris_sample.save('../samples/nagatoro_iris.png')
+    """
