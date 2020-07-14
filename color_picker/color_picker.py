@@ -99,7 +99,90 @@ def render_reticle(path: str, pixel: tuple) -> Image.Image:
     return im
 
 
+def gradient(color_x: np.array, color_y: np.array, percent: float) -> tuple:
+    """
+    Computes the gradient between two colors.
+
+    :param color_x: the first color as RBG
+    :param color_y: the second color as RGB
+    :param percent: the ratio between two colors
+    :return: the gradient between two colors as RGB
+    """
+    return tuple((((color_y - color_x) * percent) + color_x).astype(int))
+
+
+def generate_gradient(color_x: tuple, color_y: tuple, size: tuple) -> tuple:
+    """
+    Creates a list of pixels that represent a rectangle gradient.
+
+    :param color_x: the first color as RGB
+    :param color_y: the second color as RGB
+    :param size: the size of the rectangle (width, height)
+    :return: the gradient as a tuple
+    """
+    print(size)
+    img = list()
+    for x in range(size[0]):
+        for y in range(size[1]):
+            img.append(gradient(np.array(color_x), np.array(color_y), x / (size[0] - 1)))
+    return tuple(img)
+
+
+def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
+    """
+    Renders a vertical rectangular gradient given two colors and a size.
+
+    :param color_x: the first color in RGB
+    :param color_y: the second color in RGB
+    :param size: the size of the rectangle (width, height)
+    :return: None
+    """
+    img = generate_gradient(color_x, color_y, size)
+    grad = Image.new("RGB", (23, 197))
+    grad.putdata(img)
+    grad.show()
+    grad.save('gradient.png')
+
+
+def get_color(color: tuple):
+    if color[0] == color[1] == color[2]:
+        return search("../assets/cast.png", color), 100
+    else:
+        h, s, v = hsv(*color)
+        if s > .995 or v > .995:
+            return search("../assets/cast.png", color), 100
+        else:
+            gray = int(np.sum(color) / 3)
+            gray = (gray, gray, gray)
+            x = int((h / 360) * 268)
+            h, s, v = hsv(*gray)
+            im: Image.Image = Image.open('../assets/cast-grayscale.png')
+            pix = im.load()
+            minimum = (x, 0)
+            for y in range(im.height):
+                dist = color_diff(np.array(gray), np.array(pix[x, y]))
+                if dist < color_diff(np.array(gray), np.array(pix[minimum[0], minimum[1]])):
+                    minimum = (x, y)
+            im: Image.Image = Image.open('../assets/cast.png')
+            pix = im.load()
+            rgb = pix[minimum[0], minimum[1]]
+            grad = generate_gradient(rgb, gray, (23, 197))
+            index = 0
+            for i, c in enumerate(grad):
+                dist = color_diff(np.array(c), np.array(color))
+                if dist < color_diff(np.array(c), np.array(grad[index])):
+                    index = i
+            ratio = index / len(grad)
+            return minimum, ratio
+
+
 if __name__ == '__main__':
+    # WOOOO RISKY
+    pixel, ratio = get_color((24,16,138))
+    render_reticle("../assets/cast.png", pixel).show()
+    print(ratio)
+
+    """
     # Nagatoro skin color lookup
     nagatoro_skin_color = (233, 183, 146)
     pixel = search('../assets/human-newman.png', nagatoro_skin_color)
@@ -116,3 +199,4 @@ if __name__ == '__main__':
     nagatoro_iris_sample = render_reticle("../assets/cast.png", pixel)
     nagatoro_iris_sample.show()
     nagatoro_iris_sample.save('../samples/nagatoro_iris.png')
+    """
