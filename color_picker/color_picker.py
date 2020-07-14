@@ -145,7 +145,14 @@ def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
     grad.save('gradient.png')
 
 
-def get_closest_color(colors: Sequence, target_color: tuple):
+def get_closest_color(colors: Sequence, target_color: tuple) -> int:
+    """
+    Gets the index of closest color from a sequence.
+
+    :param colors: a sequence of RGB colors
+    :param target_color: an RGB color to find
+    :return: the index of the closest color
+    """
     min_index = 0
     for i, color in enumerate(colors):
         distance = color_diff(np.array(color), np.array(target_color))
@@ -166,12 +173,8 @@ def get_color(color: tuple):
             gray = (gray, gray, gray)
             x = int((h / 360) * 268)
             im: Image.Image = Image.open('../assets/cast-grayscale.png')
-            pix = im.load()
-            minimum = (x, 0)
-            for y in range(im.height):
-                dist = color_diff(np.array(gray), np.array(pix[x, y]))
-                if dist < color_diff(np.array(gray), np.array(pix[minimum[0], minimum[1]])):
-                    minimum = (x, y)
+            column = list(im.getdata())[x::im.width]
+            minimum = (x, get_closest_color(column, gray))
             im: Image.Image = Image.open('../assets/cast.png')
             pix = im.load()
             rgb = pix[minimum[0], minimum[1]]
