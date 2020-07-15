@@ -229,7 +229,14 @@ def get_cast_color(color: tuple):
     return minimum
 
 
-def lookup_pixel(path: str, pixel):
+def lookup_pixel(path: str, pixel: tuple) -> tuple:
+    """
+    Looks up the color of a pixel given an image path and a pixel location.
+
+    :param path: the path to an image
+    :param pixel: the location of a pixel (x, y)
+    :return: color as an RGB tuple (0 -> 255, 0 -> 255, 0 -> 255)
+    """
     im: Image.Image = Image.open(path)
     pix = im.load()
     color = pix[pixel[0], pixel[1]]
