@@ -5,8 +5,12 @@ from PIL import Image, ImageDraw
 
 THRESHOLD = .995
 
+GRADIENT_SIZE = (23, 197)
+
 CAST_COLOR_IMAGE = "../assets/cast.png"
 CAST_GRAY_IMAGE = '../assets/cast-grayscale.png'
+SLIDER_IMAGE = '../assets/slider.png'
+RETICLE_IMAGE = '../assets/reticle.png'
 
 
 def color_diff(rgb_x: np.array, rgb_y: np.array) -> float:
@@ -101,7 +105,7 @@ def render_reticle(path: str, pixel: tuple) -> Image.Image:
     :return: the updated image
     """
     im: Image.Image = Image.open(path)
-    reticle = Image.open('../assets/reticle.png')
+    reticle = Image.open(RETICLE_IMAGE)
     im.paste(reticle, (pixel[0] - 13, pixel[1] - 13), reticle)
     return im
 
@@ -148,7 +152,7 @@ def _render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
 
 
 def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
-    slider: Image.Image = Image.open('../assets/slider.png')
+    slider: Image.Image = Image.open(SLIDER_IMAGE)
     img = Image.new("RGB", (gradient_bar.width + slider.width // 2, gradient_bar.height))
     img.paste(gradient_bar)
     img.paste(slider, (slider.width // 2, int(img.height * (1 - ratio))), slider)
@@ -174,8 +178,8 @@ def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image):
 def render_color_palette(color: tuple):
     pixel, ratio = get_cast_color_info(color)
     reticle_preview = render_reticle(CAST_COLOR_IMAGE, pixel)
-    gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), (23, 197))
-    gradient_bar = _render_gradient(gradient, (23, 197))
+    gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), GRADIENT_SIZE)
+    gradient_bar = _render_gradient(gradient, GRADIENT_SIZE)
     slider = _render_slider(gradient_bar, ratio)
     color_preview = _render_color(gradient[int((1 - ratio) * len(gradient))], slider, 23)
     preview = _render_preview(reticle_preview, color_preview)
@@ -243,7 +247,7 @@ def get_cast_scaling_factor(color: tuple, minimum: tuple) -> float:
     """
     average_gray = get_average_gray(color)
     closest_color = lookup_pixel(CAST_COLOR_IMAGE, minimum)
-    grad = generate_gradient(closest_color, average_gray, (23, 197))
+    grad = generate_gradient(closest_color, average_gray, GRADIENT_SIZE)
     index = get_closest_color(grad, color)
     percent = 1 - (index / len(grad))
     return percent
@@ -266,8 +270,9 @@ def get_cast_color_info(color: tuple) -> tuple:
 
 
 if __name__ == '__main__':
-    file_name = input("Please provide file name: ")
-    color = tuple(int(x.strip()) for x in input("Please enter a color: ").split(','))
+    file_name = input("Please provide file name (include .png): ")
+    rgb_input = input("Please enter a color as comma-separated RGB: ")
+    color = tuple(int(x.strip()) for x in rgb_input.split(','))
     preview = render_color_palette(color)
     preview.show()
     preview.save(file_name)
