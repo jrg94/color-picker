@@ -129,9 +129,9 @@ def generate_gradient(color_x: tuple, color_y: tuple, size: tuple) -> tuple:
     :return: the gradient as a tuple
     """
     img = list()
-    for x in range(size[0]):
-        for y in range(size[1]):
-            img.append(gradient(np.array(color_x), np.array(color_y), x / (size[0] - 1)))
+    for y in range(size[1]):
+        for x in range(size[0]):
+            img.append(gradient(np.array(color_x), np.array(color_y), y / (size[1] - 1)))
     return tuple(img)
 
 
@@ -144,11 +144,12 @@ def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
     :param size: the size of the rectangle (width, height)
     :return: None
     """
-    img = generate_gradient(color_x, color_y, size)
-    grad = Image.new("RGB", (23, 197))
-    grad.putdata(img)
-    grad.show()
-    grad.save('gradient.png')
+    slider: Image.Image = Image.open('../assets/slider.png')
+    grad = generate_gradient(color_x, color_y, size)
+    img = Image.new("RGB", size)
+    img.putdata(grad)
+    img.show()
+    img.save('gradient.png')
 
 
 def get_closest_color(colors: Sequence, target_color: tuple) -> int:
@@ -233,6 +234,8 @@ if __name__ == '__main__':
     pixel, ratio = get_cast_color_info((195, 188, 169))
     render_reticle("../assets/cast.png", pixel).show()
     print(ratio)
+
+    render_gradient((195, 188, 169), (100, 100, 100), (23, 197))
 
     """
     # Nagatoro skin color lookup
