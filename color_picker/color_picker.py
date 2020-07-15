@@ -1,8 +1,7 @@
 from typing import Sequence
 
 import numpy as np
-from PIL import Image
-
+from PIL import Image, ImageDraw
 
 THRESHOLD = .995
 
@@ -156,6 +155,22 @@ def render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
     return img
 
 
+def render_color(color: tuple, slider: Image.Image, size: int):
+    space = int(1.5 * size)
+    img = Image.new("RGB", (slider.width, slider.height + space))
+    img.paste(slider, (0, space))
+    ImageDraw.Draw(img).rectangle(((0, 0), (size, size)), fill=color)
+    return img
+
+
+def render_preview(reticle_preview: Image.Image, color_preview: Image.Image):
+    size = (reticle_preview.width + color_preview.width + 10, reticle_preview.height)
+    preview = Image.new("RGB", size)
+    preview.paste(reticle_preview)
+    preview.paste(color_preview, (reticle_preview.width + 10, reticle_preview.height - color_preview.height))
+    return preview
+
+
 def get_closest_color(colors: Sequence, target_color: tuple) -> int:
     """
     Gets the index of closest color from a sequence.
@@ -199,6 +214,13 @@ def get_cast_color(color: tuple):
     return minimum
 
 
+def lookup_pixel(path: str, pixel):
+    im: Image.Image = Image.open(path)
+    pix = im.load()
+    color = pix[pixel[0], pixel[1]]
+    return color
+
+
 def get_cast_scaling_factor(color: tuple, minimum: tuple) -> float:
     """
     Computes a scaling factor given a target color and
@@ -209,9 +231,7 @@ def get_cast_scaling_factor(color: tuple, minimum: tuple) -> float:
     :return: a scaling factor (0 -> 1)
     """
     average_gray = get_average_gray(color)
-    im: Image.Image = Image.open(CAST_COLOR_IMAGE)
-    pix = im.load()
-    closest_color = pix[minimum[0], minimum[1]]
+    closest_color = lookup_pixel(CAST_COLOR_IMAGE, minimum)
     grad = generate_gradient(closest_color, average_gray, (23, 197))
     index = get_closest_color(grad, color)
     percent = 1 - (index / len(grad))
@@ -235,12 +255,16 @@ def get_cast_color_info(color: tuple) -> tuple:
 
 
 if __name__ == '__main__':
-    pixel, ratio = get_cast_color_info((195, 188, 169))
-    render_reticle("../assets/cast.png", pixel).show()
-    print(ratio)
-
-    gradient = generate_gradient((195, 188, 169), (100, 100, 100), (23, 197))
-    render_slider(render_gradient(gradient, (23, 197)), ratio).show()
+    color = (181, 122, 106)
+    pixel, ratio = get_cast_color_info(color)
+    reticle_preview = render_reticle("../assets/cast.png", pixel)
+    gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), (23, 197))
+    gradient_bar = render_gradient(gradient, (23, 197))
+    slider = render_slider(gradient_bar, ratio)
+    color_preview = render_color(gradient[int((1 - ratio) * len(gradient))], slider, 23)
+    preview = render_preview(reticle_preview, color_preview)
+    preview.show()
+    preview.save("../samples/preview.png")
 
     """
     # Nagatoro skin color lookup
