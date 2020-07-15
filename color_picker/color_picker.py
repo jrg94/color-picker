@@ -166,7 +166,15 @@ def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
     return img
 
 
-def _render_color(color: tuple, slider: Image.Image, size: int):
+def _render_color(color: tuple, slider: Image.Image, size: int) -> Image.Image:
+    """
+    Draws a color square above a slider.
+
+    :param color: the color to be rendered
+    :param slider: the slider image
+    :param size: the size of the color square
+    :return: the new image with the color square above the gradient bar
+    """
     space = int(1.5 * size)
     img = Image.new("RGB", (slider.width, slider.height + space))
     img.paste(slider, (0, space))
