@@ -134,7 +134,7 @@ def generate_gradient(color_x: tuple, color_y: tuple, size: tuple) -> tuple:
     return tuple(img)
 
 
-def render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
+def _render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
     """
     Renders a vertical rectangular gradient given two colors and a size.
 
@@ -147,7 +147,7 @@ def render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
     return gradient_bar
 
 
-def render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
+def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
     slider: Image.Image = Image.open('../assets/slider.png')
     img = Image.new("RGB", (gradient_bar.width + slider.width // 2, gradient_bar.height))
     img.paste(gradient_bar)
@@ -155,7 +155,7 @@ def render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
     return img
 
 
-def render_color(color: tuple, slider: Image.Image, size: int):
+def _render_color(color: tuple, slider: Image.Image, size: int):
     space = int(1.5 * size)
     img = Image.new("RGB", (slider.width, slider.height + space))
     img.paste(slider, (0, space))
@@ -163,7 +163,7 @@ def render_color(color: tuple, slider: Image.Image, size: int):
     return img
 
 
-def render_preview(reticle_preview: Image.Image, color_preview: Image.Image):
+def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image):
     size = (reticle_preview.width + color_preview.width + 10, reticle_preview.height)
     preview = Image.new("RGB", size)
     preview.paste(reticle_preview)
@@ -175,10 +175,10 @@ def render_color_palette(color: tuple):
     pixel, ratio = get_cast_color_info(color)
     reticle_preview = render_reticle(CAST_COLOR_IMAGE, pixel)
     gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), (23, 197))
-    gradient_bar = render_gradient(gradient, (23, 197))
-    slider = render_slider(gradient_bar, ratio)
-    color_preview = render_color(gradient[int((1 - ratio) * len(gradient))], slider, 23)
-    preview = render_preview(reticle_preview, color_preview)
+    gradient_bar = _render_gradient(gradient, (23, 197))
+    slider = _render_slider(gradient_bar, ratio)
+    color_preview = _render_color(gradient[int((1 - ratio) * len(gradient))], slider, 23)
+    preview = _render_preview(reticle_preview, color_preview)
     return preview
 
 
@@ -266,7 +266,8 @@ def get_cast_color_info(color: tuple) -> tuple:
 
 
 if __name__ == '__main__':
+    file_name = input("Please provide file name: ")
     color = tuple(int(x.strip()) for x in input("Please enter a color: ").split(','))
     preview = render_color_palette(color)
     preview.show()
-    preview.save("../samples/preview.png")
+    preview.save(file_name)
