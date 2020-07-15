@@ -162,7 +162,7 @@ def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
     slider: Image.Image = Image.open(SLIDER_IMAGE)
     img = Image.new("RGB", (gradient_bar.width + slider.width // 2, gradient_bar.height))
     img.paste(gradient_bar)
-    img.paste(slider, (slider.width // 2, int(img.height * (1 - ratio))), slider)
+    img.paste(slider, (slider.width // 2, int(img.height * (1 - ratio)) - 9), slider)
     return img
 
 
