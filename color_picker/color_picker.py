@@ -171,6 +171,17 @@ def render_preview(reticle_preview: Image.Image, color_preview: Image.Image):
     return preview
 
 
+def render_color_palette(color: tuple):
+    pixel, ratio = get_cast_color_info(color)
+    reticle_preview = render_reticle(CAST_COLOR_IMAGE, pixel)
+    gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), (23, 197))
+    gradient_bar = render_gradient(gradient, (23, 197))
+    slider = render_slider(gradient_bar, ratio)
+    color_preview = render_color(gradient[int((1 - ratio) * len(gradient))], slider, 23)
+    preview = render_preview(reticle_preview, color_preview)
+    return preview
+
+
 def get_closest_color(colors: Sequence, target_color: tuple) -> int:
     """
     Gets the index of closest color from a sequence.
@@ -255,32 +266,7 @@ def get_cast_color_info(color: tuple) -> tuple:
 
 
 if __name__ == '__main__':
-    color = (181, 122, 106)
-    pixel, ratio = get_cast_color_info(color)
-    reticle_preview = render_reticle("../assets/cast.png", pixel)
-    gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), (23, 197))
-    gradient_bar = render_gradient(gradient, (23, 197))
-    slider = render_slider(gradient_bar, ratio)
-    color_preview = render_color(gradient[int((1 - ratio) * len(gradient))], slider, 23)
-    preview = render_preview(reticle_preview, color_preview)
+    color = tuple(int(x.strip()) for x in input("Please enter a color: ").split(','))
+    preview = render_color_palette(color)
     preview.show()
     preview.save("../samples/preview.png")
-
-    """
-    # Nagatoro skin color lookup
-    nagatoro_skin_color = (233, 183, 146)
-    pixel = search('../assets/human-newman.png', nagatoro_skin_color)
-    nagatoro_skin_sample = render_reticle('../assets/human-newman.png', pixel)
-    nagatoro_skin_sample.show()
-    nagatoro_skin_sample.save('../samples/nagatoro_skin.png')
-
-    # Nagatoro iris color lookup
-    nagatoro_iris_color = (152, 90, 70)
-    h, s, v = hsv(*nagatoro_iris_color)
-    print(f"Hue: {h}\nSaturation: {s}\nValue: {v}")
-    nagatoro_iris_color = rgb(h, 1, v)
-    pixel = search('../assets/cast.png', nagatoro_iris_color)
-    nagatoro_iris_sample = render_reticle("../assets/cast.png", pixel)
-    nagatoro_iris_sample.show()
-    nagatoro_iris_sample.save('../samples/nagatoro_iris.png')
-    """
