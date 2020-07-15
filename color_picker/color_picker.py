@@ -1,13 +1,16 @@
 from typing import Sequence
 
 import numpy as np
-from PIL import Image
-
+from PIL import Image, ImageDraw
 
 THRESHOLD = .995
 
+GRADIENT_SIZE = (23, 197)
+
 CAST_COLOR_IMAGE = "../assets/cast.png"
 CAST_GRAY_IMAGE = '../assets/cast-grayscale.png'
+SLIDER_IMAGE = '../assets/slider.png'
+RETICLE_IMAGE = '../assets/reticle.png'
 
 
 def color_diff(rgb_x: np.array, rgb_y: np.array) -> float:
@@ -37,7 +40,7 @@ def hsv(red: int, green: int, blue: int) -> tuple:
     if delta == 0:
         hue = 0
     elif value_index == 0:
-        hue = 60 * ((hue[1] - hue[2]) / delta)
+        hue = 60 * (((hue[1] - hue[2]) / delta) % 6)
     elif value_index == 1:
         hue = 60 * (((hue[2] - hue[0]) / delta) + 2)
     else:
@@ -102,7 +105,7 @@ def render_reticle(path: str, pixel: tuple) -> Image.Image:
     :return: the updated image
     """
     im: Image.Image = Image.open(path)
-    reticle = Image.open('../assets/reticle.png')
+    reticle = Image.open(RETICLE_IMAGE)
     im.paste(reticle, (pixel[0] - 13, pixel[1] - 13), reticle)
     return im
 
@@ -129,26 +132,87 @@ def generate_gradient(color_x: tuple, color_y: tuple, size: tuple) -> tuple:
     :return: the gradient as a tuple
     """
     img = list()
-    for x in range(size[0]):
-        for y in range(size[1]):
-            img.append(gradient(np.array(color_x), np.array(color_y), x / (size[0] - 1)))
+    for y in range(size[1]):
+        for x in range(size[0]):
+            img.append(gradient(np.array(color_x), np.array(color_y), y / (size[1] - 1)))
     return tuple(img)
 
 
-def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
+def _render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
     """
     Renders a vertical rectangular gradient given two colors and a size.
 
-    :param color_x: the first color in RGB
-    :param color_y: the second color in RGB
+    :param gradient_pixels: the gradient pixels as a sequence
     :param size: the size of the rectangle (width, height)
     :return: None
     """
-    img = generate_gradient(color_x, color_y, size)
-    grad = Image.new("RGB", (23, 197))
-    grad.putdata(img)
-    grad.show()
-    grad.save('gradient.png')
+    gradient_bar = Image.new("RGB", size)
+    gradient_bar.putdata(gradient_pixels)
+    return gradient_bar
+
+
+def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
+    """
+    Draws a slider on a gradient bar.
+
+    :param gradient_bar: the gradient bar image
+    :param ratio: the vertical position of the slider (0 -> 1)
+    :return: the new image with the slider over the gradient bar
+    """
+    slider: Image.Image = Image.open(SLIDER_IMAGE)
+    img = Image.new("RGB", (gradient_bar.width + slider.width // 2, gradient_bar.height))
+    img.paste(gradient_bar)
+    img.paste(slider, (slider.width // 2, int(img.height * (1 - ratio)) - 9), slider)
+    return img
+
+
+def _render_color(color: tuple, slider: Image.Image, size: int) -> Image.Image:
+    """
+    Draws a color square above a slider.
+
+    :param color: the color to be rendered
+    :param slider: the slider image
+    :param size: the size of the color square
+    :return: the new image with the color square above the gradient bar
+    """
+    space = int(1.5 * size)
+    img = Image.new("RGB", (slider.width, slider.height + space))
+    img.paste(slider, (0, space))
+    ImageDraw.Draw(img).rectangle(((0, 0), (size, size)), fill=color)
+    return img
+
+
+def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image) -> Image.Image:
+    """
+    Draws the complete preview given a reticle preview and a color preview.
+
+    :param reticle_preview: the color image including a reticle
+    :param color_preview: the gradient bar, slider, and color preview square image
+    :return: the combined image
+    """
+    size = (reticle_preview.width + color_preview.width + 10, reticle_preview.height)
+    preview = Image.new("RGB", size)
+    preview.paste(reticle_preview)
+    preview.paste(color_preview, (reticle_preview.width + 10, reticle_preview.height - color_preview.height))
+    return preview
+
+
+def render_color_palette(color: tuple) -> Image.Image:
+    """
+    Assembles the entire color palette preview from all the render pieces.
+
+    :param color: the color to lookup
+    :return: the preview image
+    """
+    pixel, ratio = get_cast_color_info(color)
+    reticle_preview = render_reticle(CAST_COLOR_IMAGE, pixel)
+    gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), GRADIENT_SIZE)
+    gradient_bar = _render_gradient(gradient, GRADIENT_SIZE)
+    slider = _render_slider(gradient_bar, ratio)
+    color_location = int((1 - ratio) * len(gradient))
+    color_preview = _render_color(gradient[color_location], slider, 23)
+    preview = _render_preview(reticle_preview, color_preview)
+    return preview
 
 
 def get_closest_color(colors: Sequence, target_color: tuple) -> int:
@@ -194,6 +258,20 @@ def get_cast_color(color: tuple):
     return minimum
 
 
+def lookup_pixel(path: str, pixel: tuple) -> tuple:
+    """
+    Looks up the color of a pixel given an image path and a pixel location.
+
+    :param path: the path to an image
+    :param pixel: the location of a pixel (x, y)
+    :return: color as an RGB tuple (0 -> 255, 0 -> 255, 0 -> 255)
+    """
+    im: Image.Image = Image.open(path)
+    pix = im.load()
+    color = pix[pixel[0], pixel[1]]
+    return color
+
+
 def get_cast_scaling_factor(color: tuple, minimum: tuple) -> float:
     """
     Computes a scaling factor given a target color and
@@ -204,10 +282,8 @@ def get_cast_scaling_factor(color: tuple, minimum: tuple) -> float:
     :return: a scaling factor (0 -> 1)
     """
     average_gray = get_average_gray(color)
-    im: Image.Image = Image.open(CAST_COLOR_IMAGE)
-    pix = im.load()
-    closest_color = pix[minimum[0], minimum[1]]
-    grad = generate_gradient(closest_color, average_gray, (23, 197))
+    closest_color = lookup_pixel(CAST_COLOR_IMAGE, minimum)
+    grad = generate_gradient(closest_color, average_gray, GRADIENT_SIZE)
     index = get_closest_color(grad, color)
     percent = 1 - (index / len(grad))
     return percent
@@ -222,33 +298,26 @@ def get_cast_color_info(color: tuple) -> tuple:
     """
     h, s, v = hsv(*color)
     if color[0] == color[1] == color[2] or s > THRESHOLD or v > THRESHOLD:
-        return search(CAST_COLOR_IMAGE, color), 100
+        return search(CAST_COLOR_IMAGE, color), 1
     else:
         minimum = get_cast_color(color)
         percent = get_cast_scaling_factor(color, minimum)
         return minimum, percent
 
 
+def main() -> None:
+    """
+    The drop-in function.
+
+    :return: None
+    """
+    file_name = input("Please provide file name (include .png): ")
+    rgb_input = input("Please enter a color as comma-separated RGB: ")
+    color = tuple(int(x.strip()) for x in rgb_input.split(','))
+    preview = render_color_palette(color)
+    preview.show()
+    preview.save(file_name)
+
+
 if __name__ == '__main__':
-    pixel, ratio = get_cast_color_info((195, 188, 169))
-    render_reticle("../assets/cast.png", pixel).show()
-    print(ratio)
-
-    """
-    # Nagatoro skin color lookup
-    nagatoro_skin_color = (233, 183, 146)
-    pixel = search('../assets/human-newman.png', nagatoro_skin_color)
-    nagatoro_skin_sample = render_reticle('../assets/human-newman.png', pixel)
-    nagatoro_skin_sample.show()
-    nagatoro_skin_sample.save('../samples/nagatoro_skin.png')
-
-    # Nagatoro iris color lookup
-    nagatoro_iris_color = (152, 90, 70)
-    h, s, v = hsv(*nagatoro_iris_color)
-    print(f"Hue: {h}\nSaturation: {s}\nValue: {v}")
-    nagatoro_iris_color = rgb(h, 1, v)
-    pixel = search('../assets/cast.png', nagatoro_iris_color)
-    nagatoro_iris_sample = render_reticle("../assets/cast.png", pixel)
-    nagatoro_iris_sample.show()
-    nagatoro_iris_sample.save('../samples/nagatoro_iris.png')
-    """
+    main()
