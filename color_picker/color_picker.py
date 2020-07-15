@@ -152,6 +152,13 @@ def _render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
 
 
 def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
+    """
+    Draws a slider on a gradient bar.
+
+    :param gradient_bar: the gradient bar image
+    :param ratio: the vertical position of the slider (0 -> 1)
+    :return: the new image with the slider over the gradient bar
+    """
     slider: Image.Image = Image.open(SLIDER_IMAGE)
     img = Image.new("RGB", (gradient_bar.width + slider.width // 2, gradient_bar.height))
     img.paste(gradient_bar)
@@ -276,10 +283,19 @@ def get_cast_color_info(color: tuple) -> tuple:
         return minimum, percent
 
 
-if __name__ == '__main__':
+def main() -> None:
+    """
+    The drop-in function.
+
+    :return: None
+    """
     file_name = input("Please provide file name (include .png): ")
     rgb_input = input("Please enter a color as comma-separated RGB: ")
     color = tuple(int(x.strip()) for x in rgb_input.split(','))
     preview = render_color_palette(color)
     preview.show()
     preview.save(file_name)
+
+
+if __name__ == '__main__':
+    main()
