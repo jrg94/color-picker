@@ -37,7 +37,7 @@ def hsv(red: int, green: int, blue: int) -> tuple:
     if delta == 0:
         hue = 0
     elif value_index == 0:
-        hue = 60 * ((hue[1] - hue[2]) / delta)
+        hue = 60 * (((hue[1] - hue[2]) / delta) % 6)
     elif value_index == 1:
         hue = 60 * (((hue[2] - hue[0]) / delta) + 2)
     else:
