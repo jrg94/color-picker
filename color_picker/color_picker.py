@@ -135,7 +135,7 @@ def generate_gradient(color_x: tuple, color_y: tuple, size: tuple) -> tuple:
     return tuple(img)
 
 
-def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
+def render_gradient(color_x: tuple, color_y: tuple, size: tuple, ratio: float):
     """
     Renders a vertical rectangular gradient given two colors and a size.
 
@@ -146,8 +146,11 @@ def render_gradient(color_x: tuple, color_y: tuple, size: tuple):
     """
     slider: Image.Image = Image.open('../assets/slider.png')
     grad = generate_gradient(color_x, color_y, size)
-    img = Image.new("RGB", size)
-    img.putdata(grad)
+    gradient_bar = Image.new("RGB", size)
+    gradient_bar.putdata(grad)
+    img = Image.new("RGB", (size[0] + slider.width // 2, size[1]))
+    img.paste(gradient_bar)
+    img.paste(slider, (slider.width // 2, int(img.height * (1 - ratio))), slider)
     img.show()
     img.save('gradient.png')
 
@@ -235,7 +238,7 @@ if __name__ == '__main__':
     render_reticle("../assets/cast.png", pixel).show()
     print(ratio)
 
-    render_gradient((195, 188, 169), (100, 100, 100), (23, 197))
+    render_gradient((195, 188, 169), (100, 100, 100), (23, 197), ratio)
 
     """
     # Nagatoro skin color lookup
