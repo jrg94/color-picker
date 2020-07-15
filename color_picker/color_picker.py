@@ -182,7 +182,14 @@ def _render_color(color: tuple, slider: Image.Image, size: int) -> Image.Image:
     return img
 
 
-def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image):
+def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image) -> Image.Image:
+    """
+    Draws the complete preview given a reticle preview and a color preview.
+
+    :param reticle_preview: the color image including a reticle
+    :param color_preview: the gradient bar, slider, and color preview square image
+    :return: the combined image
+    """
     size = (reticle_preview.width + color_preview.width + 10, reticle_preview.height)
     preview = Image.new("RGB", size)
     preview.paste(reticle_preview)
@@ -190,7 +197,13 @@ def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image):
     return preview
 
 
-def render_color_palette(color: tuple):
+def render_color_palette(color: tuple) -> Image.Image:
+    """
+    Assembles the entire color palette preview from all the render pieces.
+
+    :param color: the color to lookup
+    :return: the preview image
+    """
     pixel, ratio = get_cast_color_info(color)
     reticle_preview = render_reticle(CAST_COLOR_IMAGE, pixel)
     gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), GRADIENT_SIZE)
