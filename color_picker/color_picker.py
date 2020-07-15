@@ -209,7 +209,8 @@ def render_color_palette(color: tuple) -> Image.Image:
     gradient = generate_gradient(lookup_pixel(CAST_COLOR_IMAGE, pixel), get_average_gray(color), GRADIENT_SIZE)
     gradient_bar = _render_gradient(gradient, GRADIENT_SIZE)
     slider = _render_slider(gradient_bar, ratio)
-    color_preview = _render_color(gradient[int((1 - ratio) * len(gradient))], slider, 23)
+    color_location = int((1 - ratio) * len(gradient))
+    color_preview = _render_color(gradient[color_location], slider, 23)
     preview = _render_preview(reticle_preview, color_preview)
     return preview
 
@@ -297,7 +298,7 @@ def get_cast_color_info(color: tuple) -> tuple:
     """
     h, s, v = hsv(*color)
     if color[0] == color[1] == color[2] or s > THRESHOLD or v > THRESHOLD:
-        return search(CAST_COLOR_IMAGE, color), 100
+        return search(CAST_COLOR_IMAGE, color), 1
     else:
         minimum = get_cast_color(color)
         percent = get_cast_scaling_factor(color, minimum)
