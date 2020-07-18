@@ -211,6 +211,12 @@ def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image) ->
 
 
 def _render_window_ui(preview: Image.Image) -> Image.Image:
+    """
+    Renders the window UI with the generated preview.
+
+    :param preview: the generated preview image (reticle, gradient, etc.)
+    :return: the complete rendered window
+    """
     window = Image.open(WINDOW_UI)
     window.paste(preview, (32, 69), preview)
     return window
