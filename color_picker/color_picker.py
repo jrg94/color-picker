@@ -188,7 +188,7 @@ def _render_color(color: tuple, slider: Image.Image, size: int) -> Image.Image:
     :param size: the size of the color square
     :return: the new image with the color square above the gradient bar
     """
-    space = int(1.5 * size)
+    space = 30
     img = Image.new("RGBA", (slider.width, slider.height + space), (0, 0, 0, 0))
     img.paste(slider, (0, space), slider)
     ImageDraw.Draw(img).rectangle(((0, 0), (size, size)), fill=color)
@@ -203,16 +203,16 @@ def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image) ->
     :param color_preview: the gradient bar, slider, and color preview square image
     :return: the combined image
     """
-    size = (reticle_preview.width + color_preview.width + 10, reticle_preview.height)
+    size = (reticle_preview.width + color_preview.width + 20, reticle_preview.height)
     preview = Image.new("RGBA", size, (0, 0, 0, 0))
     preview.paste(reticle_preview)
-    preview.paste(color_preview, (reticle_preview.width + 10, reticle_preview.height - color_preview.height), color_preview)
+    preview.paste(color_preview, (reticle_preview.width + 20, reticle_preview.height - color_preview.height + 11), color_preview)
     return preview
 
 
 def _render_window_ui(preview: Image.Image) -> Image.Image:
     window = Image.open(WINDOW_UI)
-    window.paste(preview, (31, 69), preview)
+    window.paste(preview, (32, 69), preview)
     return window
 
 
