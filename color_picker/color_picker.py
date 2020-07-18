@@ -161,9 +161,21 @@ def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
     :return: the new image with the slider over the gradient bar
     """
     slider: Image.Image = Image.open(SLIDER_IMAGE)
-    img = Image.new("RGB", (gradient_bar.width + slider.width // 2, gradient_bar.height))
-    img.paste(gradient_bar)
-    img.paste(slider, (slider.width // 2, int(img.height * (1 - ratio)) - 9), slider)
+    img_size = (
+        gradient_bar.width + slider.width // 2,  # enough space for the bar and half the slider
+        gradient_bar.height + slider.height  # enough space for the bar and the entire slider
+    )
+    gradient_bar_pos = (
+        0,  # edge of the space
+        slider.height // 2  # leave vertical space for the slider
+    )
+    slider_pos = (
+        slider.width // 2,  # halfway across bar
+        int(gradient_bar.height * (1 - ratio))  # position relative to gradient bar
+    )
+    img = Image.new("RGBA", img_size)
+    img.paste(gradient_bar, gradient_bar_pos)
+    img.paste(slider, slider_pos, slider)
     return img
 
 
