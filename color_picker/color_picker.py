@@ -147,7 +147,7 @@ def _render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
     :param size: the size of the rectangle (width, height)
     :return: None
     """
-    gradient_bar = Image.new("RGB", size)
+    gradient_bar = Image.new("RGBA", size, (0, 0, 0, 0))
     gradient_bar.putdata(gradient_pixels)
     return gradient_bar
 
@@ -173,8 +173,8 @@ def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
         slider.width // 2,  # halfway across bar
         int(gradient_bar.height * (1 - ratio))  # position relative to gradient bar
     )
-    img = Image.new("RGBA", img_size)
-    img.paste(gradient_bar, gradient_bar_pos)
+    img = Image.new("RGBA", img_size, (0, 0, 0, 0))
+    img.paste(gradient_bar, gradient_bar_pos, gradient_bar)
     img.paste(slider, slider_pos, slider)
     return img
 
@@ -189,8 +189,8 @@ def _render_color(color: tuple, slider: Image.Image, size: int) -> Image.Image:
     :return: the new image with the color square above the gradient bar
     """
     space = int(1.5 * size)
-    img = Image.new("RGB", (slider.width, slider.height + space))
-    img.paste(slider, (0, space))
+    img = Image.new("RGBA", (slider.width, slider.height + space), (0, 0, 0, 0))
+    img.paste(slider, (0, space), slider)
     ImageDraw.Draw(img).rectangle(((0, 0), (size, size)), fill=color)
     return img
 
@@ -204,15 +204,15 @@ def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image) ->
     :return: the combined image
     """
     size = (reticle_preview.width + color_preview.width + 10, reticle_preview.height)
-    preview = Image.new("RGB", size)
+    preview = Image.new("RGBA", size, (0, 0, 0, 0))
     preview.paste(reticle_preview)
-    preview.paste(color_preview, (reticle_preview.width + 10, reticle_preview.height - color_preview.height))
+    preview.paste(color_preview, (reticle_preview.width + 10, reticle_preview.height - color_preview.height), color_preview)
     return preview
 
 
 def _render_window_ui(preview: Image.Image) -> Image.Image:
     window = Image.open(WINDOW_UI)
-    window.paste(preview, (31, 69))
+    window.paste(preview, (31, 69), preview)
     return window
 
 
