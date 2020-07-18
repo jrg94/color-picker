@@ -11,6 +11,7 @@ CAST_COLOR_IMAGE = "../assets/cast.png"
 CAST_GRAY_IMAGE = '../assets/cast-grayscale.png'
 SLIDER_IMAGE = '../assets/slider.png'
 RETICLE_IMAGE = '../assets/reticle.png'
+WINDOW_UI = '../assets/window_ui.png'
 
 
 def color_diff(rgb_x: np.array, rgb_y: np.array) -> float:
@@ -197,6 +198,12 @@ def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image) ->
     return preview
 
 
+def _render_window_ui(preview: Image.Image) -> Image.Image:
+    window = Image.open(WINDOW_UI)
+    window.paste(preview, (31, 69))
+    return window
+
+
 def render_color_palette(color: tuple) -> Image.Image:
     """
     Assembles the entire color palette preview from all the render pieces.
@@ -212,7 +219,8 @@ def render_color_palette(color: tuple) -> Image.Image:
     color_location = int((1 - ratio) * len(gradient))
     color_preview = _render_color(gradient[color_location], slider, 23)
     preview = _render_preview(reticle_preview, color_preview)
-    return preview
+    window_ui = _render_window_ui(preview)
+    return window_ui
 
 
 def get_closest_color(colors: Sequence, target_color: tuple) -> int:
