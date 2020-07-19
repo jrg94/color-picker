@@ -11,6 +11,7 @@ CAST_COLOR_IMAGE = "../assets/cast.png"
 CAST_GRAY_IMAGE = '../assets/cast-grayscale.png'
 SLIDER_IMAGE = '../assets/slider.png'
 RETICLE_IMAGE = '../assets/reticle.png'
+WINDOW_UI = '../assets/window_ui.png'
 
 
 def color_diff(rgb_x: np.array, rgb_y: np.array) -> float:
@@ -146,7 +147,7 @@ def _render_gradient(gradient_pixels: tuple, size: tuple) -> Image.Image:
     :param size: the size of the rectangle (width, height)
     :return: None
     """
-    gradient_bar = Image.new("RGB", size)
+    gradient_bar = Image.new("RGBA", size, (0, 0, 0, 0))
     gradient_bar.putdata(gradient_pixels)
     return gradient_bar
 
@@ -160,9 +161,21 @@ def _render_slider(gradient_bar: Image.Image, ratio: float) -> Image.Image:
     :return: the new image with the slider over the gradient bar
     """
     slider: Image.Image = Image.open(SLIDER_IMAGE)
-    img = Image.new("RGB", (gradient_bar.width + slider.width // 2, gradient_bar.height))
-    img.paste(gradient_bar)
-    img.paste(slider, (slider.width // 2, int(img.height * (1 - ratio)) - 9), slider)
+    img_size = (
+        gradient_bar.width + slider.width // 2,  # enough space for the bar and half the slider
+        gradient_bar.height + slider.height  # enough space for the bar and the entire slider
+    )
+    gradient_bar_pos = (
+        0,  # edge of the space
+        slider.height // 2  # leave vertical space for the slider
+    )
+    slider_pos = (
+        slider.width // 2,  # halfway across bar
+        int(gradient_bar.height * (1 - ratio))  # position relative to gradient bar
+    )
+    img = Image.new("RGBA", img_size, (0, 0, 0, 0))
+    img.paste(gradient_bar, gradient_bar_pos, gradient_bar)
+    img.paste(slider, slider_pos, slider)
     return img
 
 
@@ -175,9 +188,9 @@ def _render_color(color: tuple, slider: Image.Image, size: int) -> Image.Image:
     :param size: the size of the color square
     :return: the new image with the color square above the gradient bar
     """
-    space = int(1.5 * size)
-    img = Image.new("RGB", (slider.width, slider.height + space))
-    img.paste(slider, (0, space))
+    space = 30
+    img = Image.new("RGBA", (slider.width, slider.height + space), (0, 0, 0, 0))
+    img.paste(slider, (0, space), slider)
     ImageDraw.Draw(img).rectangle(((0, 0), (size, size)), fill=color)
     return img
 
@@ -190,11 +203,23 @@ def _render_preview(reticle_preview: Image.Image, color_preview: Image.Image) ->
     :param color_preview: the gradient bar, slider, and color preview square image
     :return: the combined image
     """
-    size = (reticle_preview.width + color_preview.width + 10, reticle_preview.height)
-    preview = Image.new("RGB", size)
+    size = (reticle_preview.width + color_preview.width + 20, reticle_preview.height)
+    preview = Image.new("RGBA", size, (0, 0, 0, 0))
     preview.paste(reticle_preview)
-    preview.paste(color_preview, (reticle_preview.width + 10, reticle_preview.height - color_preview.height))
+    preview.paste(color_preview, (reticle_preview.width + 20, reticle_preview.height - color_preview.height + 11), color_preview)
     return preview
+
+
+def _render_window_ui(preview: Image.Image) -> Image.Image:
+    """
+    Renders the window UI with the generated preview.
+
+    :param preview: the generated preview image (reticle, gradient, etc.)
+    :return: the complete rendered window
+    """
+    window = Image.open(WINDOW_UI)
+    window.paste(preview, (32, 69), preview)
+    return window
 
 
 def render_color_palette(color: tuple) -> Image.Image:
@@ -212,7 +237,8 @@ def render_color_palette(color: tuple) -> Image.Image:
     color_location = int((1 - ratio) * len(gradient))
     color_preview = _render_color(gradient[color_location], slider, 23)
     preview = _render_preview(reticle_preview, color_preview)
-    return preview
+    window_ui = _render_window_ui(preview)
+    return window_ui
 
 
 def get_closest_color(colors: Sequence, target_color: tuple) -> int:
