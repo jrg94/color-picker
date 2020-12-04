@@ -4,21 +4,20 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="image-titler",
-    version="2.3.3",
+    name="pso2-color-picker",
+    version="0.1.0",
     author="The Renegade Coder",
     author_email="jeremy.grifski@therenegadecoder.com",
-    description="An image processing utility which provides options for generating thumbnails for various social media platforms.",
+    description="A color matching tool for PSO2.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/TheRenegadeCoder/image-titler",
+    url="https://github.com/jrg94/color-picker",
     packages=setuptools.find_packages(),
     include_package_data=True,
     python_requires=">=3.8",
     entry_points={
         "console_scripts": [
-            'image-titler = imagetitler.cli:main',
-            'image_titler = imagetitler.cli:main',  # For backwards compatibility
+            'color-picker = color_picker.color_picker:main',
         ],
         "gui_scripts": [
             'image-titler-gui = imagetitler.gui:main',
@@ -26,14 +25,10 @@ setuptools.setup(
     },
     classifiers=[
         "Programming Language :: Python :: 3.8",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'titlecase',
         'pillow>=6.0.0',
-        'pathvalidate',
-        'piexif',
-        'matplotlib'
+        'numpy=1.19.3',
     ],
 )
