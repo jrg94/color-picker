@@ -1,1 +1,1 @@
-recursive-include assets/ *
+include assets/*.png
