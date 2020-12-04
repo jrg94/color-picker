@@ -1,3 +1,4 @@
+import os
 from typing import Sequence
 
 import numpy as np
@@ -7,11 +8,11 @@ THRESHOLD = .995
 
 GRADIENT_SIZE = (23, 197)
 
-CAST_COLOR_IMAGE = "../assets/cast.png"
-CAST_GRAY_IMAGE = '../assets/cast-grayscale.png'
-SLIDER_IMAGE = '../assets/slider.png'
-RETICLE_IMAGE = '../assets/reticle.png'
-WINDOW_UI = '../assets/window_ui.png'
+CAST_COLOR_IMAGE = os.path.join(os.path.dirname(__file__), "assets", "cast.png")
+CAST_GRAY_IMAGE = os.path.join(os.path.dirname(__file__), 'assets', 'cast-grayscale.png')
+SLIDER_IMAGE = os.path.join(os.path.dirname(__file__), 'assets', 'slider.png')
+RETICLE_IMAGE = os.path.join(os.path.dirname(__file__), 'assets', 'reticle.png')
+WINDOW_UI = os.path.join(os.path.dirname(__file__), 'assets', 'window_ui.png')
 
 
 def color_diff(rgb_x: np.array, rgb_y: np.array) -> float:
