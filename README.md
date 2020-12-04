@@ -12,7 +12,7 @@ project that works as follows:
     
 If done correctly, a window should pop up with an image like the following:
 
-![Sample Green](samples/tomo.png)
+![Sample Green](https://raw.githubusercontent.com/jrg94/color-picker/master/samples/tomo.png)
 
 Likewise, a file will be saved at the location you ran the script with the
 file name you provided in Step 3i. 
