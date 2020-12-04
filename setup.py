@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pso2-color-picker",
-    version="0.1.0",
+    version="0.1.2",
     author="The Renegade Coder",
     author_email="jeremy.grifski@therenegadecoder.com",
     description="A color matching tool for PSO2.",
