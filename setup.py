@@ -29,6 +29,6 @@ setuptools.setup(
     ],
     install_requires=[
         'pillow>=6.0.0',
-        'numpy==1.19.3',
+        'numpy==1.22.0',
     ],
 )
